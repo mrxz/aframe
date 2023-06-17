@@ -38,8 +38,6 @@ module.exports.Component = registerComponent('tracked-controls', {
         handTrackingEnabled: data.handTrackingEnabled,
         space: data.space
       });
-    } else {
-      el.setAttribute('tracked-controls-webvr', data);
     }
   }
 });

@@ -5,31 +5,13 @@ var trackedControlsUtils = require('../utils/tracked-controls');
 var checkControllerPresentAndSetup = trackedControlsUtils.checkControllerPresentAndSetup;
 var emitIfAxesChanged = trackedControlsUtils.emitIfAxesChanged;
 var onButtonEvent = trackedControlsUtils.onButtonEvent;
-var isWebXRAvailable = require('../utils/').device.isWebXRAvailable;
 
 var GEARVR_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/samsung/';
 var GEARVR_CONTROLLER_MODEL_OBJ_URL = GEARVR_CONTROLLER_MODEL_BASE_URL + 'gear_vr_controller.obj';
 var GEARVR_CONTROLLER_MODEL_OBJ_MTL = GEARVR_CONTROLLER_MODEL_BASE_URL + 'gear_vr_controller.mtl';
 
-var GAMEPAD_ID_WEBXR = 'samsung-gearvr';
-var GAMEPAD_ID_WEBVR = 'Gear VR';
-
 // Prefix for Gen1 and Gen2 Oculus Touch Controllers.
-var GAMEPAD_ID_PREFIX = isWebXRAvailable ? GAMEPAD_ID_WEBXR : GAMEPAD_ID_WEBVR;
-
-/**
- * Button indices:
- * 0 - trackpad
- * 1 - trigger
- *
- * Axis:
- * 0 - trackpad x
- * 1 - trackpad y
- */
-var INPUT_MAPPING_WEBVR = {
-  axes: {trackpad: [0, 1]},
-  buttons: ['trackpad', 'trigger']
-};
+var GAMEPAD_ID_PREFIX = 'samsung-gearvr';
 
 /**
  * Button indices:
@@ -43,12 +25,10 @@ var INPUT_MAPPING_WEBVR = {
  * 1 - touchpad y
  * Reference: https://github.com/immersive-web/webxr-input-profiles/blob/master/packages/registry/profiles/samsung/samsung-gearvr.json
  */
-var INPUT_MAPPING_WEBXR = {
+var INPUT_MAPPING = {
   axes: {touchpad: [0, 1]},
   buttons: ['trigger', 'none', 'touchpad', 'none', 'menu']
 };
-
-var INPUT_MAPPING = isWebXRAvailable ? INPUT_MAPPING_WEBXR : INPUT_MAPPING_WEBVR;
 
 /**
  * Gear VR controls.

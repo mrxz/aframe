@@ -17,42 +17,11 @@ var DEFAULT_HANDEDNESS = require('../constants').DEFAULT_HANDEDNESS;
 var MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/microsoft/';
 var MODEL_FILENAMES = { left: 'left.glb', right: 'right.glb', default: 'universal.glb' };
 
-var isWebXRAvailable = require('../utils/').device.isWebXRAvailable;
-
-var GAMEPAD_ID_WEBXR = 'windows-mixed-reality';
-var GAMEPAD_ID_WEBVR = 'Spatial Controller (Spatial Interaction Source) ';
 var GAMEPAD_ID_PATTERN = /([0-9a-zA-Z]+-[0-9a-zA-Z]+)$/;
 
-var GAMEPAD_ID_PREFIX = isWebXRAvailable ? GAMEPAD_ID_WEBXR : GAMEPAD_ID_WEBVR;
+var GAMEPAD_ID_PREFIX = 'windows-mixed-reality';
 
-var INPUT_MAPPING_WEBVR = {
-  // A-Frame specific semantic axis names
-  axes: {'thumbstick': [0, 1], 'trackpad': [2, 3]},
-  // A-Frame specific semantic button names
-  buttons: ['thumbstick', 'trigger', 'grip', 'menu', 'trackpad'],
-  // A mapping of the semantic name to node name in the glTF model file,
-  // that should be transformed by axis value.
-  // This array mirrors the browser Gamepad.axes array, such that
-  // the mesh corresponding to axis 0 is in this array index 0.
-  axisMeshNames: [
-    'THUMBSTICK_X',
-    'THUMBSTICK_Y',
-    'TOUCHPAD_TOUCH_X',
-    'TOUCHPAD_TOUCH_Y'
-  ],
-  // A mapping of the semantic name to button node name in the glTF model file,
-  // that should be transformed by button value.
-  buttonMeshNames: {
-    'trigger': 'SELECT',
-    'menu': 'MENU',
-    'grip': 'GRASP',
-    'thumbstick': 'THUMBSTICK_PRESS',
-    'trackpad': 'TOUCHPAD_PRESS'
-  },
-  pointingPoseMeshName: 'POINTING_POSE'
-};
-
-var INPUT_MAPPING_WEBXR = {
+var INPUT_MAPPING = {
   // A-Frame specific semantic axis names
   axes: {'touchpad': [0, 1], 'thumbstick': [2, 3]},
   // A-Frame specific semantic button names
@@ -78,8 +47,6 @@ var INPUT_MAPPING_WEBXR = {
   },
   pointingPoseMeshName: 'POINTING_POSE'
 };
-
-var INPUT_MAPPING = isWebXRAvailable ? INPUT_MAPPING_WEBXR : INPUT_MAPPING_WEBVR;
 
 /**
  * Windows Motion Controller controls.
