@@ -1,14 +1,13 @@
-import * as SUPER_THREE from 'super-three';
-import { DRACOLoader } from 'super-three/examples/jsm/loaders/DRACOLoader';
-import { GLTFLoader } from 'super-three/examples/jsm/loaders/GLTFLoader';
-import { KTX2Loader } from 'super-three/examples/jsm/loaders/KTX2Loader';
-import { OBJLoader } from 'super-three/examples/jsm/loaders/OBJLoader';
-import { MTLLoader } from 'super-three/examples/jsm/loaders/MTLLoader';
-import * as BufferGeometryUtils from 'super-three/examples/jsm/utils/BufferGeometryUtils';
-import { LightProbeGenerator } from 'super-three/examples/jsm/lights/LightProbeGenerator';
+import * as SUPER_THREE from 'three';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils';
+import { LightProbeGenerator } from 'three/examples/jsm/lights/LightProbeGenerator';
 
-var objectAssign = require('object-assign');
-var THREE = window.THREE = objectAssign({}, SUPER_THREE);
+var THREE = window.THREE = Object.assign({}, SUPER_THREE);
 
 // TODO: Eventually include these only if they are needed by a component.
 require('../../vendor/DeviceOrientationControls'); // THREE.DeviceOrientationControls

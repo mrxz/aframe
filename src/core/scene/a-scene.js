@@ -574,7 +574,6 @@ class AScene extends AEntity {
   }
 
   setupRenderer () {
-    var self = this;
     var renderer;
     var rendererAttr;
     var rendererAttrString;
@@ -623,10 +622,28 @@ class AScene extends AEntity {
     renderer = this.renderer = new THREE.WebGLRenderer(rendererConfig);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.sortObjects = false;
-    if (this.camera) { renderer.xr.setPoseTarget(this.camera.el.object3D); }
-    this.addEventListener('camera-set-active', function () {
-      renderer.xr.setPoseTarget(self.camera.el.object3D);
-    });
+
+    // Note: patch WebXRManager to update the camera _entity_, not the actual camera
+    //       to handle both Three.js revisions <=152 and >153 handle both updateCamera and updateCameraXR;
+    var originalUpdateCameraXR = (renderer.xr.updateCameraXR || renderer.xr.updateCamera).bind(renderer.xr);
+    var substituteCamera = new THREE.PerspectiveCamera();
+    renderer.xr.updateCameraXR = renderer.xr.updateCamera = function (camera) {
+      var cameraEl = camera.el;
+
+      // Copy relevant camera properties
+      substituteCamera.near = camera.near;
+      substituteCamera.far = camera.far;
+      substituteCamera.parent = camera.parent.parent;
+
+      var xrCamera = originalUpdateCameraXR(substituteCamera) || renderer.xr.getCamera();
+
+      // Update the cameraEl and children with the pose from headset
+      cameraEl.object3D.matrix.copy(substituteCamera.matrix);
+      cameraEl.object3D.matrix.decompose(cameraEl.object3D.position, cameraEl.object3D.quaternion, cameraEl.object3D.scale);
+      cameraEl.object3D.updateMatrixWorld(true);
+
+      return xrCamera;
+    };
   }
 
   /**

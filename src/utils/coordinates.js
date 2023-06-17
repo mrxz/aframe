@@ -1,6 +1,5 @@
 /* global THREE */
 var debug = require('./debug');
-var extend = require('object-assign');
 
 var warn = debug('utils:coordinates:warn');
 
@@ -46,7 +45,7 @@ function parse (value, defaultVec) {
   }
 
   if (value === null || value === undefined) {
-    return typeof defaultVec === OBJECT ? extend({}, defaultVec) : defaultVec;
+    return typeof defaultVec === OBJECT ? Object.assign({}, defaultVec) : defaultVec;
   }
 
   coordinate = value.trim().split(whitespaceRegex);

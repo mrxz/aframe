@@ -36,18 +36,13 @@
   ],
   "dependencies": {
     "buffer": "^6.0.3",
-    "custom-event-polyfill": "^1.0.6",
     "debug": "ngokevin/debug#noTimestamp",
     "deep-assign": "^2.0.0",
     "@ungap/custom-elements": "^1.1.0",
     "load-bmfont": "^1.2.3",
-    "object-assign": "^4.0.1",
-    "present": "0.0.6",
-    "promise-polyfill": "^3.1.0",
     "super-animejs": "^3.1.0",
-    "super-three": "0.154.1",
-    "three-bmfont-text": "dmarcos/three-bmfont-text#eed4878795be9b3e38cf6aec6b903f56acd1f695",
-    "webvr-polyfill": "^0.10.12"
+    "three": "^0.154.0",
+    "three-bmfont-text": "dmarcos/three-bmfont-text#eed4878795be9b3e38cf6aec6b903f56acd1f695"
   },
   "devDependencies": {
     "@babel/core": "^7.17.10",
