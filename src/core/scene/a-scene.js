@@ -141,6 +141,9 @@ class AScene extends AEntity {
 
     this.initSystems();
 
+    // Add to scene index.
+    scenes.push(this);
+
     // WebXR Immersive navigation handler.
     if (this.hasWebXR && navigator.xr && navigator.xr.addEventListener) {
       navigator.xr.addEventListener('sessiongranted', function () { self.enterVR(); });
@@ -165,9 +168,6 @@ class AScene extends AEntity {
       }
     });
     this.play();
-
-    // Add to scene index.
-    scenes.push(this);
   }
 
   /**

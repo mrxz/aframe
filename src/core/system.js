@@ -1,6 +1,7 @@
 var components = require('./component');
 var schema = require('./schema');
 var utils = require('../utils/');
+var scenes = require('./scene/scenes');
 
 var parseProperties = schema.parseProperties;
 var parseProperty = schema.parseProperty;
@@ -129,7 +130,6 @@ module.exports.registerSystem = function (name, definition) {
   var i;
   var NewSystem;
   var proto = {};
-  var scenes = utils.findAllScenes(document);
 
   // Format definition object to prototype object.
   Object.keys(definition).forEach(function (key) {
