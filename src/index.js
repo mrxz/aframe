@@ -1,39 +1,10 @@
-// Polyfill `Promise`.
-window.Promise = window.Promise || require('promise-polyfill');
-
+// Custom elements polyfill
 require('@ungap/custom-elements');
 
-// WebVR polyfill
-// Check before the polyfill runs.
-window.hasNativeWebVRImplementation = !!window.navigator.getVRDisplays ||
-                                      !!window.navigator.getVRDevices;
 window.hasNativeWebXRImplementation = navigator.xr !== undefined;
-
-// If native WebXR or WebVR are defined WebVRPolyfill does not initialize.
-if (!window.hasNativeWebXRImplementation && !window.hasNativeWebVRImplementation) {
-  var isIOSOlderThan10 = require('./utils/isIOSOlderThan10');
-  // Workaround for iOS Safari canvas sizing issues in stereo (webvr-polyfill/issues/102).
-  // Only for iOS on versions older than 10.
-  var bufferScale = isIOSOlderThan10(window.navigator.userAgent) ? 1 / window.devicePixelRatio : 1;
-  var WebVRPolyfill = require('webvr-polyfill');
-  var polyfillConfig = {
-    BUFFER_SCALE: bufferScale,
-    CARDBOARD_UI_DISABLED: true,
-    ROTATE_INSTRUCTIONS_DISABLED: true,
-    MOBILE_WAKE_LOCK: !!window.cordova
-  };
-  window.webvrpolyfill = new WebVRPolyfill(polyfillConfig);
-}
 
 var utils = require('./utils/');
 var debug = utils.debug;
-
-if (utils.isIE11) {
-  // Polyfill `CustomEvent`.
-  require('custom-event-polyfill');
-  // Polyfill String.startsWith.
-  require('../vendor/starts-with-polyfill');
-}
 
 var error = debug('A-Frame:error');
 var warn = debug('A-Frame:warn');
@@ -54,8 +25,6 @@ if (!window.cordova && window.location.protocol === 'file:') {
     'https://aframe.io/docs/0.5.0/introduction/getting-started.html#using-a-local-server.');
 }
 
-require('present'); // Polyfill `performance.now()`.
-
 // CSS.
 if (utils.device.isBrowserEnvironment) {
   require('./style/aframe.css');
@@ -75,8 +44,6 @@ var systems = require('./core/system').systems;
 // Exports THREE to window so three.js can be used without alteration.
 var THREE = window.THREE = require('./lib/three');
 
-var pkg = require('../package');
-
 require('./components/index'); // Register standard components.
 require('./geometries/index'); // Register standard geometries.
 require('./shaders/index'); // Register standard shaders.
@@ -93,9 +60,7 @@ require('./extras/components/');
 require('./extras/primitives/');
 
 console.log('A-Frame Version: 1.4.2 (Date 2023-06-14, Commit #f52ec24b)');
-console.log('THREE Version (https://github.com/supermedium/three.js):',
-            pkg.dependencies['super-three']);
-console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
+console.log('THREE Version (https://github.com/supermedium/three.js):', THREE.REVISION);
 
 module.exports = window.AFRAME = {
   AComponent: require('./core/component').Component,
@@ -121,5 +86,5 @@ module.exports = window.AFRAME = {
   systems: systems,
   THREE: THREE,
   utils: utils,
-  version: pkg.version
+  version: require('./constants').AFRAME_VERSION
 };
