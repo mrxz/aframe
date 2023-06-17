@@ -241,7 +241,7 @@ class AEntity extends ANode {
       if (!self.parentEl) { return; }
 
       self.updateComponents();
-      if (self.isScene || self.parentEl.isPlaying) { self.play(); }
+      if (self.parentEl.isPlaying) { self.play(); }
     });
   }
 
