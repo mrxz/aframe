@@ -10,27 +10,7 @@ var DAYDREAM_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/goog
 var DAYDREAM_CONTROLLER_MODEL_OBJ_URL = DAYDREAM_CONTROLLER_MODEL_BASE_URL + 'vr_controller_daydream.obj';
 var DAYDREAM_CONTROLLER_MODEL_OBJ_MTL = DAYDREAM_CONTROLLER_MODEL_BASE_URL + 'vr_controller_daydream.mtl';
 
-var isWebXRAvailable = require('../utils/').device.isWebXRAvailable;
-
-var GAMEPAD_ID_WEBXR = 'google-daydream';
-var GAMEPAD_ID_WEBVR = 'Daydream Controller';
-
-var GAMEPAD_ID_PREFIX = isWebXRAvailable ? GAMEPAD_ID_WEBXR : GAMEPAD_ID_WEBVR;
-
-/**
- * Button indices:
- * 0 - trackpad
- * 1 - menu (never dispatched on this layer)
- * 2 - system (never dispatched on this layer)
- *
- * Axis:
- * 0 - trackpad x
- * 1 - trackpad y
- */
-var INPUT_MAPPING_WEBVR = {
-  axes: {trackpad: [0, 1]},
-  buttons: ['trackpad', 'menu', 'system']
-};
+var GAMEPAD_ID_PREFIX = 'google-daydream';
 
 /**
  * Button indices:
@@ -43,12 +23,10 @@ var INPUT_MAPPING_WEBVR = {
  * 1 - touchpad y
  * Reference: https://github.com/immersive-web/webxr-input-profiles/blob/master/packages/registry/profiles/google/google-daydream.json
  */
-var INPUT_MAPPING_WEBXR = {
+var INPUT_MAPPING = {
   axes: {touchpad: [0, 1]},
   buttons: ['none', 'none', 'touchpad', 'menu', 'system']
 };
-
-var INPUT_MAPPING = isWebXRAvailable ? INPUT_MAPPING_WEBXR : INPUT_MAPPING_WEBVR;
 
 /**
  * Daydream controls.
