@@ -1,6 +1,3 @@
-// Custom elements polyfill
-require('@ungap/custom-elements');
-
 window.hasNativeWebXRImplementation = navigator.xr !== undefined;
 
 var utils = require('./utils/');
@@ -28,7 +25,6 @@ if (!window.cordova && window.location.protocol === 'file:') {
 // CSS.
 if (utils.device.isBrowserEnvironment) {
   require('./style/aframe.css');
-  require('./style/rStats.css');
 }
 
 // Required before `AEntity` so that all components are registered.
@@ -44,10 +40,35 @@ var systems = require('./core/system').systems;
 // Exports THREE to window so three.js can be used without alteration.
 var THREE = window.THREE = require('./lib/three');
 
-require('./components/index'); // Register standard components.
-require('./geometries/index'); // Register standard geometries.
-require('./shaders/index'); // Register standard shaders.
-require('./systems/index'); // Register standard systems.
+// require('./components/index'); // Register standard components.
+require('./components/camera');
+require('./components/material');
+require('./components/position');
+require('./components/scale');
+require('./components/rotation');
+require('./components/visible');
+require('./components/light');
+require('./components/look-controls');
+require('./components/wasd-controls');
+require('./components/geometry');
+require('./components/scene/background');
+require('./components/scene/device-orientation-permission-ui');
+require('./components/scene/fog');
+require('./components/scene/pool');
+require('./components/scene/vr-mode-ui');
+require('./geometries/box');
+require('./geometries/plane');
+require('./geometries/cylinder');
+require('./geometries/sphere');
+require('./shaders/flat');
+require('./shaders/standard');
+require('./systems/camera');
+require('./systems/geometry');
+require('./systems/light');
+require('./systems/material');
+require('./systems/renderer');
+require('./systems/tracked-controls-webxr');
+require('./systems/webxr');
 var ANode = require('./core/a-node').ANode;
 var AEntity = require('./core/a-entity').AEntity; // Depends on ANode and core components.
 
@@ -56,8 +77,10 @@ require('./core/a-cubemap');
 require('./core/a-mixin');
 
 // Extras.
-require('./extras/components/');
-require('./extras/primitives/');
+// require('./extras/components/');
+// require('./extras/primitives/');
+require('./extras/primitives/primitives/a-camera');
+require('./extras/primitives/primitives/meshPrimitives');
 
 console.log('A-Frame Version: 1.4.2 (Date 2023-07-06, Commit #d74c46ff)');
 console.log('THREE Version (https://github.com/supermedium/three.js):', THREE.REVISION);
@@ -66,7 +89,7 @@ module.exports = window.AFRAME = {
   AComponent: require('./core/component').Component,
   AEntity: AEntity,
   ANode: ANode,
-  ANIME: require('super-animejs').default,
+  // ANIME: require('super-animejs').default,
   AScene: AScene,
   components: components,
   coreComponents: Object.keys(components),
