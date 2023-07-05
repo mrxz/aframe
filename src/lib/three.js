@@ -19,7 +19,7 @@ if (THREE.Cache) {
 }
 
 // THREE.DRACOLoader.prototype.crossOrigin = 'anonymous';
-THREE.GLTFLoader.prototype.crossOrigin = 'anonymous';
+// THREE.GLTFLoader.prototype.crossOrigin = 'anonymous';
 // THREE.KTX2Loader.prototype.crossOrigin = 'anonymous';
 // THREE.MTLLoader.prototype.crossOrigin = 'anonymous';
 // THREE.OBJLoader.prototype.crossOrigin = 'anonymous';
