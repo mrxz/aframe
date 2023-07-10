@@ -3,7 +3,7 @@ var loadBMFont = require('load-bmfont');
 
 var registerComponent = require('../core/component').registerComponent;
 var coreShader = require('../core/shader');
-var THREE = require('../lib/three');
+var THREE = require('three');
 var utils = require('../utils/');
 
 var error = utils.debug('components:text:error');

@@ -1,9 +1,17 @@
-var Wakelock = require('../../../vendor/wakelock/wakelock');
 
+var wakelockSentinel;
 module.exports = function initWakelock (scene) {
-  if (!scene.isMobile) { return; }
+  if (!scene.isMobile || !navigator.wakeLock) { return; }
 
-  var wakelock = scene.wakelock = new Wakelock();
-  scene.addEventListener('enter-vr', function () { wakelock.request(); });
-  scene.addEventListener('exit-vr', function () { wakelock.release(); });
+  scene.addEventListener('enter-vr', function () {
+    navigator.wakeLock.request().then(function (sentinel) {
+      wakelockSentinel = sentinel;
+    });
+  });
+  scene.addEventListener('exit-vr', function () {
+    if(wakelockSentinel) {
+      wakelockSentinel.release();
+      wakelockSentinel = undefined;
+    }
+  });
 };

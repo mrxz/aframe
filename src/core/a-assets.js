@@ -2,7 +2,7 @@
 var ANode = require('./a-node').ANode;
 var bind = require('../utils/bind');
 var debug = require('../utils/debug');
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var fileLoader = new THREE.FileLoader();
 var warn = debug('core:a-assets:warn');

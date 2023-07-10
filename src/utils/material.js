@@ -1,4 +1,4 @@
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var HLS_MIMETYPES = ['application/x-mpegurl', 'application/vnd.apple.mpegurl'];
 

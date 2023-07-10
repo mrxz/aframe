@@ -1,5 +1,5 @@
 /* global assert, setup, suite, test */
-var THREE = require('lib/three');
+var THREE = require('three');
 
 var inferResponseType = require('core/a-assets').inferResponseType;
 var getFileNameFromURL = require('core/a-assets').getFileNameFromURL;

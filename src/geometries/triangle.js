@@ -1,5 +1,5 @@
 var registerGeometry = require('../core/geometry').registerGeometry;
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var quaternion = new THREE.Quaternion();
 var rotateVector = new THREE.Vector3(0, 0, 1);

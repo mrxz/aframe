@@ -31,6 +31,9 @@ module.exports = {
       Buffer: ['buffer', 'Buffer']
     })
   ],
+  externals: {
+    'three': 'THREE'
+  },
   module: {
     rules: [
       {

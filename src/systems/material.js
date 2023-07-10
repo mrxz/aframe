@@ -1,5 +1,5 @@
 var registerSystem = require('../core/system').registerSystem;
-var THREE = require('../lib/three');
+var THREE = require('three');
 var utils = require('../utils/');
 var isHLS = require('../utils/material').isHLS;
 var setTextureProperties = require('../utils/material').setTextureProperties;

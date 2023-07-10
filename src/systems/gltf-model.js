@@ -1,5 +1,5 @@
 var registerSystem = require('../core/system').registerSystem;
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 function fetchScript (src) {
   return new Promise(function (resolve, reject) {

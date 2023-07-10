@@ -1,7 +1,7 @@
 /* global Promise */
 var utils = require('../utils/');
 var component = require('../core/component');
-var THREE = require('../lib/three');
+var THREE = require('three');
 var shader = require('../core/shader');
 
 var error = utils.debug('components:material:error');

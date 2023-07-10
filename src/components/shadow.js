@@ -1,5 +1,5 @@
 var component = require('../core/component');
-var THREE = require('../lib/three');
+var THREE = require('three');
 var bind = require('../utils/bind');
 var registerComponent = component.registerComponent;
 

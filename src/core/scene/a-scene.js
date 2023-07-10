@@ -4,7 +4,7 @@ var initWakelock = require('./wakelock');
 var loadingScreen = require('./loadingScreen');
 var scenes = require('./scenes');
 var systems = require('../system').systems;
-var THREE = require('../../lib/three');
+var THREE = require('three');
 var utils = require('../../utils/');
 // Require after.
 var AEntity = require('../a-entity').AEntity;

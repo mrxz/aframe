@@ -1,5 +1,5 @@
 var registerShader = require('../core/shader').registerShader;
-var THREE = require('../lib/three');
+var THREE = require('three');
 var utils = require('../utils/');
 
 var CubeLoader = new THREE.CubeTextureLoader();

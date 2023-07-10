@@ -3,7 +3,7 @@ var utils = require('../utils');
 var diff = utils.diff;
 var debug = require('../utils/debug');
 var registerComponent = require('../core/component').registerComponent;
-var THREE = require('../lib/three');
+var THREE = require('three');
 var mathUtils = require('../utils/math');
 
 var degToRad = THREE.MathUtils.degToRad;

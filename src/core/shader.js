@@ -3,7 +3,7 @@ var schema = require('./schema');
 var processSchema = schema.process;
 var shaders = module.exports.shaders = {};  // Keep track of registered shaders.
 var shaderNames = module.exports.shaderNames = [];  // Keep track of the names of registered shaders.
-var THREE = require('../lib/three');
+var THREE = require('three');
 var utils = require('../utils');
 
 // A-Frame properties to three.js uniform types.

@@ -1,6 +1,6 @@
 var registerComponent = require('../core/component').registerComponent;
 var registerShader = require('../core/shader').registerShader;
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 /**
  * Link component. Connect experiences and traverse between them in VR

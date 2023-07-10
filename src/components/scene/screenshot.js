@@ -1,6 +1,6 @@
 /* global ImageData, URL */
 var registerComponent = require('../../core/component').registerComponent;
-var THREE = require('../../lib/three');
+var THREE = require('three');
 
 var VERTEX_SHADER = [
   'attribute vec3 position;',

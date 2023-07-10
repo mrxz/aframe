@@ -1,6 +1,6 @@
 var debug = require('../utils/debug');
 var registerComponent = require('../core/component').registerComponent;
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var warn = debug('components:obj-model:warn');
 

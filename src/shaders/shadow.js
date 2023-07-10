@@ -1,5 +1,5 @@
 var registerShader = require('../core/shader').registerShader;
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 /**
  * Flat shader using THREE.ShadowMaterial.

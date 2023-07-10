@@ -1,6 +1,6 @@
 var registerComponent = require('../core/component').registerComponent;
 var bind = require('../utils/bind');
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var trackedControlsUtils = require('../utils/tracked-controls');
 var checkControllerPresentAndSetup = trackedControlsUtils.checkControllerPresentAndSetup;

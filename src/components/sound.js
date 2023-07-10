@@ -1,6 +1,6 @@
 var registerComponent = require('../core/component').registerComponent;
 var debug = require('../utils/debug');
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var warn = debug('components:sound:warn');
 

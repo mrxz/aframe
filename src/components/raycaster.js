@@ -1,7 +1,7 @@
 /* global MutationObserver */
 
 var registerComponent = require('../core/component').registerComponent;
-var THREE = require('../lib/three');
+var THREE = require('three');
 var utils = require('../utils/');
 
 var warn = utils.debug('components:raycaster:warn');

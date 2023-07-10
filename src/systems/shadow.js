@@ -1,5 +1,5 @@
 var registerSystem = require('../core/system').registerSystem;
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var SHADOW_MAP_TYPE_MAP = {
   basic: THREE.BasicShadowMap,

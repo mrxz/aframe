@@ -1,7 +1,7 @@
 var geometries = require('../core/geometry').geometries;
 var geometryNames = require('../core/geometry').geometryNames;
 var registerComponent = require('../core/component').registerComponent;
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var dummyGeometry = new THREE.BufferGeometry();
 

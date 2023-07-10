@@ -1,6 +1,6 @@
 var registerSystem = require('../core/system').registerSystem;
 var utils = require('../utils/');
-var THREE = require('../lib/three');
+var THREE = require('three');
 
 var debug = utils.debug;
 var warn = debug('components:renderer:warn');

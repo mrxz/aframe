@@ -1,5 +1,5 @@
 var registerComponent = require('../../core/component').registerComponent;
-var THREE = require('../../lib/three');
+var THREE = require('three');
 
 var originalPosition = new THREE.Vector3();
 var originalRotation = new THREE.Vector3();

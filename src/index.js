@@ -38,7 +38,8 @@ var registerSystem = require('./core/system').registerSystem;
 var shaders = require('./core/shader').shaders;
 var systems = require('./core/system').systems;
 // Exports THREE to window so three.js can be used without alteration.
-var THREE = window.THREE = require('./lib/three');
+var THREE = window.THREE;
+THREE.Cache.enabled = true;
 
 // require('./components/index'); // Register standard components.
 require('./components/camera');
@@ -82,7 +83,7 @@ require('./core/a-mixin');
 require('./extras/primitives/primitives/a-camera');
 require('./extras/primitives/primitives/meshPrimitives');
 
-console.log('A-Frame Version: 1.4.2 (Date 2023-07-06, Commit #d74c46ff)');
+console.log('A-Frame Version: 1.4.2 (Date 2023-07-10, Commit #7a84e6df)');
 console.log('THREE Version (https://github.com/supermedium/three.js):', THREE.REVISION);
 
 module.exports = window.AFRAME = {
