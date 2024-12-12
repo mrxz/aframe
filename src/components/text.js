@@ -1,74 +1,53 @@
-var createTextGeometry = require('three-bmfont-text');
-var loadBMFont = require('load-bmfont');
-
 var registerComponent = require('../core/component').registerComponent;
-var coreShader = require('../core/shader');
 var THREE = require('../lib/three');
-var utils = require('../utils/');
-
-var error = utils.debug('components:text:error');
-var shaders = coreShader.shaders;
-var warn = utils.debug('components:text:warn');
+var troika = require('troika-three-text');
+var Text = troika.Text;
 
 // 1 to match other A-Frame default widths.
 var DEFAULT_WIDTH = 1;
+var DEFAULT_FONT = 'roboto';
 
-// @bryik set anisotropy to 16. Improves look of large amounts of text when viewed from angle.
-var MAX_ANISOTROPY = 16;
-
-var AFRAME_CDN_ROOT = require('../constants').AFRAME_CDN_ROOT;
+var AFRAME_CDN_ROOT = 'https://cdn.jsdelivr.net/gh/mrxz/aframe-assets@master/'; // require('../constants').AFRAME_CDN_ROOT;
 var FONT_BASE_URL = AFRAME_CDN_ROOT + 'fonts/';
 var FONTS = {
-  aileronsemibold: FONT_BASE_URL + 'Aileron-Semibold.fnt',
-  dejavu: FONT_BASE_URL + 'DejaVu-sdf.fnt',
-  exo2bold: FONT_BASE_URL + 'Exo2Bold.fnt',
-  exo2semibold: FONT_BASE_URL + 'Exo2SemiBold.fnt',
-  kelsonsans: FONT_BASE_URL + 'KelsonSans.fnt',
-  monoid: FONT_BASE_URL + 'Monoid.fnt',
-  mozillavr: FONT_BASE_URL + 'mozillavr.fnt',
-  roboto: FONT_BASE_URL + 'Roboto-msdf.json',
-  sourcecodepro: FONT_BASE_URL + 'SourceCodePro.fnt'
+  aileronsemibold: { src: FONT_BASE_URL + 'Aileron-Semibold.otf', pixelUnits: 32 },
+  dejavu: { src: FONT_BASE_URL + 'DejaVuSans.ttf', pixelUnits: 32 },
+  exo2bold: { src: FONT_BASE_URL + 'Exo2Bold.woff', pixelUnits: 32 },
+  exo2semibold: { src: FONT_BASE_URL + 'Exo2SemiBold.woff', pixelUnits: 32 },
+  kelsonsans: { src: FONT_BASE_URL + 'Kelson.woff', pixelUnits: 32 },
+  monoid: { src: FONT_BASE_URL + 'Monoid-Regular.ttf', pixelUnits: 32 },
+  mozillavr: { src: FONT_BASE_URL + 'mozillavr.fnt', pixelUnits: 32 }, // FIXME: can't find source font
+  roboto: { src: FONT_BASE_URL + 'Roboto.woff', pixelUnits: 38.96484375 },
+  sourcecodepro: { src: FONT_BASE_URL + 'SourceCodePro.woff', pixelUnits: 32 }
 };
-var MSDF_FONTS = ['roboto'];
-var DEFAULT_FONT = 'roboto';
-module.exports.FONTS = FONTS;
 
-var cache = new PromiseCache();
-var fontWidthFactors = {};
-var textures = {};
+// Cache of computed font metrics
+var FONT_METRICS_CACHE = {};
 
-// Regular expression for detecting a URLs with a protocol prefix.
-var protocolRe = /^\w+:/;
+var NEW_LINE_REGEX = /\\n/g;
+var TAB_REGEX = /\\t/g;
+var TRIM_NEWLINE_REGEX = /\s*\n\s*/g;
 
 /**
  * SDF-based text component.
- * Based on https://github.com/Jam3/three-bmfont-text.
- *
- * All the stock fonts are for the `sdf` registered shader, an improved version of jam3's
- * original `sdf` shader.
+ * Uses Troika text rendering https://github.com/protectwise/troika/tree/main/packages/troika-three-text.
  */
 module.exports.Component = registerComponent('text', {
   multiple: true,
 
   schema: {
     align: {type: 'string', default: 'left', oneOf: ['left', 'right', 'center']},
-    alphaTest: {default: 0.5},
     // `anchor` defaults to center to match geometries.
     anchor: {default: 'center', oneOf: ['left', 'right', 'center', 'align']},
     baseline: {default: 'center', oneOf: ['top', 'center', 'bottom']},
     color: {type: 'color', default: '#FFF'},
     font: {type: 'string', default: DEFAULT_FONT},
-    // `fontImage` defaults to the font name as a .png (e.g., mozillavr.fnt -> mozillavr.png).
-    fontImage: {type: 'string'},
     // `height` has no default, will be populated at layout.
     height: {type: 'number'},
     letterSpacing: {type: 'number', default: 0},
     // `lineHeight` defaults to font's `lineHeight` value.
     lineHeight: {type: 'number'},
-    // `negate` must be true for fonts generated with older versions of msdfgen (white background).
-    negate: {type: 'boolean', default: true},
     opacity: {type: 'number', default: 1.0},
-    shader: {default: 'sdf', oneOf: shaders},
     side: {default: 'front', oneOf: ['front', 'back', 'double']},
     tabSize: {default: 4},
     transparent: {default: true},
@@ -78,227 +57,219 @@ module.exports.Component = registerComponent('text', {
     width: {type: 'number'},
     // `wrapCount` units are about one default font character. Wrap roughly at this number.
     wrapCount: {type: 'number', default: 40},
-    // `wrapPixels` will wrap using bmfont pixel units (e.g., dejavu's is 32 pixels).
+    // `wrapPixels` will wrap using pixel units (e.g., dejavu's is 32 pixels).
     wrapPixels: {type: 'number'},
     // `xOffset` to add padding.
     xOffset: {type: 'number', default: 0},
     // `yOffset` to adjust generated fonts from tools that may have incorrect metrics.
     yOffset: {type: 'number', default: 0},
     // `zOffset` will provide a small z offset to avoid z-fighting.
-    zOffset: {type: 'number', default: 0.001}
+    zOffset: {type: 'number', default: 0.001},
+
+    // Deprecated
+    alphaTest: {default: 0.5},
+    fontImage: {type: 'string'},
+    negate: {type: 'boolean', default: true}
   },
 
   init: function () {
-    this.shaderData = {};
-    this.geometry = createTextGeometry();
-    this.createOrUpdateMaterial();
+    this.textMesh = new Text();
+    this.material = this.textMesh.material;
+    this.el.setObject3D(this.attrName, this.textMesh);
     this.explicitGeoDimensionsChecked = false;
+
+    this.computeFontMetrics = this.computeFontMetrics.bind(this);
+    this.updateLayout = this.updateLayout.bind(this);
+
+    this.fontMetricsPromise = null;
+    this.textRenderWidth = 0;
+
+    // Backwards compatibility
+    var material = this.material;
+    material.uniforms['opacity'] = Object.defineProperty({}, 'value', {
+      get: function () {
+        return material.opacity;
+      },
+      set: function (value) {
+        material.opacity = value;
+      }
+    });
+    material.uniforms['color'] = { value: material.color };
   },
 
-  update: function (oldData) {
+  update: function () {
     var data = this.data;
-    var font = this.currentFont;
-    if (textures[data.font]) {
-      this.texture = textures[data.font];
-    } else {
-      // Create texture per font.
-      this.texture = textures[data.font] = new THREE.Texture();
-      this.texture.anisotropy = MAX_ANISOTROPY;
-    }
+    var mesh = this.textMesh;
+    var material = this.material;
 
-    // Update material.
-    this.createOrUpdateMaterial();
-
-    // New font. `updateFont` will later change data and layout.
-    if (oldData.font !== data.font) {
-      this.updateFont();
+    // Loading or computing font metrics is in progress, text can't be updated
+    if (this.fontMetricsPromise) {
       return;
     }
 
-    // Update geometry and layout.
-    if (font) {
-      this.updateGeometry(this.geometry, font);
-      this.updateLayout();
+    // Check if the font metrics are available
+    var font = this.data.font;
+    var fontUrl = FONTS[font] ? FONTS[font].src : font;
+    var fontMetrics = FONT_METRICS_CACHE[font];
+    if (!fontMetrics || fontMetrics.then) {
+      this.loadFontForMetrics(font, fontUrl);
+      return;
     }
+
+    // Use fontSize 1.0 to normalize everything, actual scale is handled in updateLayout
+    mesh.fontSize = 1.0;
+    mesh.textAlign = data.align;
+    // Set anchor point in the middle, handle user defined anchor point in updateLayout
+    mesh.anchorX = 'center';
+    mesh.anchorY = 'middle';
+    mesh.overflowWrap = 'break-word';
+    // Set material color instead of mesh color for compatibility with animation component
+    material.color.set(data.color);
+    mesh.font = fontUrl;
+    mesh.letterSpacing = data.letterSpacing * fontMetrics.pixelUnitSize;
+    // `lineHeight` defaults to font's `lineHeight` value
+    mesh.lineHeight = data.lineHeight * fontMetrics.pixelUnitSize;
+    material.opacity = data.opacity;
+    material.side = parseSide(data.side);
+    material.transparent = data.transparent;
+    mesh.text = data.value.toString();
+    if (data.whiteSpace !== 'pre') {
+      // Strip whitespace around newlines, original behaviour of three-bmfont-text
+      mesh.text = mesh.text
+        .replace(TRIM_NEWLINE_REGEX, '\n').trim();
+    }
+    mesh.text = mesh.text
+      .replace(NEW_LINE_REGEX, '\n')
+      .replace(TAB_REGEX, ' '.repeat(data.tabSize));
+    mesh.whiteSpace = data.whiteSpace === 'nowrap' ? 'nowrap' : 'normal';
+    this.textRenderWidth = data.wrapPixels
+      ? data.wrapPixels * fontMetrics.pixelUnitSize
+      : (0.5 + data.wrapCount) * fontMetrics.widthFactor;
+    mesh.maxWidth = this.textRenderWidth;
+    mesh.sync(this.updateLayout);
   },
 
   /**
    * Clean up geometry, material, texture, mesh, objects.
    */
   remove: function () {
-    this.geometry.dispose();
-    this.geometry = null;
+    this.textMesh.dispose();
+    this.textMesh = null;
     this.el.removeObject3D(this.attrName);
-    this.material.dispose();
-    this.material = null;
-    this.texture.dispose();
-    this.texture = null;
-    if (this.shaderObject) { delete this.shaderObject; }
   },
 
-  /**
-   * Update the shader of the material.
-   */
-  createOrUpdateMaterial: function () {
-    var data = this.data;
-    var hasChangedShader;
-    var material = this.material;
-    var NewShader;
-    var shaderData = this.shaderData;
-    var shaderName;
+  loadFontForMetrics: function (font, fontUrl) {
+    var self = this;
 
-    // Infer shader if using a stock font (or from `-msdf` filename convention).
-    shaderName = data.shader;
-    if (MSDF_FONTS.indexOf(data.font) !== -1 || data.font.indexOf('-msdf.') >= 0) {
-      shaderName = 'msdf';
-    } else if (data.font in FONTS && MSDF_FONTS.indexOf(data.font) === -1) {
-      shaderName = 'sdf';
-    }
-
-    hasChangedShader = (this.shaderObject && this.shaderObject.name) !== shaderName;
-
-    shaderData.alphaTest = data.alphaTest;
-    shaderData.color = data.color;
-    shaderData.map = this.texture;
-    shaderData.opacity = data.opacity;
-    shaderData.side = parseSide(data.side);
-    shaderData.transparent = data.transparent;
-    shaderData.negate = data.negate;
-
-    // Shader has not changed, do an update.
-    if (!hasChangedShader) {
-      // Update shader material.
-      this.shaderObject.update(shaderData);
-      // Apparently, was not set on `init` nor `update`.
-      material.transparent = shaderData.transparent;
-      material.side = shaderData.side;
+    if (FONT_METRICS_CACHE[font]) {
+      // Promise has already been created
+      this.fontMetricsPromise = FONT_METRICS_CACHE[font].then(function () {
+        self.fontMetricsPromise = undefined;
+        self.update();
+      });
       return;
     }
 
-    // Shader has changed. Create a shader material.
-    NewShader = createShader(this.el, shaderName, shaderData);
-    this.material = NewShader.material;
-    this.shaderObject = NewShader.shader;
-
-    // Set new shader material.
-    this.material.side = shaderData.side;
-    if (this.mesh) { this.mesh.material = this.material; }
-  },
-
-  /**
-   * Load font for geometry, load font image for material, and apply.
-   */
-  updateFont: function () {
-    var data = this.data;
-    var el = this.el;
-    var fontSrc;
-    var geometry = this.geometry;
-    var self = this;
-
-    if (!data.font) { warn('No font specified. Using the default font.'); }
-
-    // Make invisible during font swap.
-    if (this.mesh) { this.mesh.visible = false; }
-
-    // Look up font URL to use, and perform cached load.
-    fontSrc = this.lookupFont(data.font || DEFAULT_FONT) || data.font;
-    cache.get(fontSrc, function doLoadFont () {
-      return loadFont(fontSrc, data.yOffset);
-    }).then(function setFont (font) {
-      var fontImgSrc;
-
-      if (font.pages.length !== 1) {
-        throw new Error('Currently only single-page bitmap fonts are supported.');
-      }
-
-      if (!fontWidthFactors[fontSrc]) {
-        font.widthFactor = fontWidthFactors[font] = computeFontWidthFactor(font);
-      }
-      self.currentFont = font;
-      // Look up font image URL to use, and perform cached load.
-      fontImgSrc = self.getFontImageSrc();
-      cache.get(fontImgSrc, function () {
-        return loadTexture(fontImgSrc);
-      }).then(function (image) {
-        // Make mesh visible and apply font image as texture.
-        var texture = self.texture;
-        // The component may have been removed at this point and texture will
-        // be null. This happens mainly while executing the tests,
-        // in this case we just return.
-        if (!texture) return;
-        texture.image = image;
-        texture.needsUpdate = true;
-        textures[data.font] = texture;
-        self.texture = texture;
-        self.initMesh();
-        self.currentFont = font;
-        // Update geometry given font metrics.
-        self.updateGeometry(geometry, font);
-        self.updateLayout();
-        self.mesh.visible = true;
-        el.emit('textfontset', {font: data.font, fontObj: font});
-      }).catch(function (err) {
-        error(err.message);
-        error(err.stack);
-      });
-    }).catch(function (err) {
-      error(err.message);
-      error(err.stack);
+    FONT_METRICS_CACHE[font] = new Promise(function (resolve, reject) {
+      // Resolve font for all digits to measure widthFactor and pixelUnitSize
+      troika.fontResolverWorkerModule.onMainThread('0123456789',
+        function onResolved (result) {
+          self.computeFontMetrics(font, result.fonts[0]);
+          resolve();
+        },
+        {
+          lang: 'en',
+          fonts: [{ src: fontUrl }],
+          style: null,
+          weight: null,
+          unicodeFontsUrl: null
+        }
+      );
     });
   },
 
-  initMesh: function () {
-    if (this.mesh) { return; }
-    this.mesh = new THREE.Mesh(this.geometry, this.material);
-    this.el.setObject3D(this.attrName, this.mesh);
-  },
+  computeFontMetrics: function (font, fontData) {
+    var sum = 0;
+    var digits = 0;
+    fontData.forEachGlyph('0123456789', 0, 0, function (glyphObj, glyphX, glyphY, charIndex) {
+      sum += glyphObj.advanceWidth;
+      digits++;
+    });
 
-  getFontImageSrc: function () {
-    if (this.data.fontImage) { return this.data.fontImage; }
-    var fontSrc = this.lookupFont(this.data.font || DEFAULT_FONT) || this.data.font;
-    var imageSrc = this.currentFont.pages[0];
-    // If the image URL contains a non-HTTP(S) protocol, assume it's an absolute
-    // path on disk and try to infer the path from the font source instead.
-    if (imageSrc.match(protocolRe) && imageSrc.indexOf('http') !== 0) {
-      return fontSrc.replace(/(\.fnt)|(\.json)/, '.png');
-    }
-    return THREE.LoaderUtils.extractUrlBase(fontSrc) + imageSrc;
+    var pixelUnits = FONTS[font] ? FONTS[font].pixelUnits : 1;
+    FONT_METRICS_CACHE[font] = {
+      widthFactor: (sum / digits) / fontData.unitsPerEm,
+      pixelUnitSize: 1 / pixelUnits
+    };
+
+    this.update();
   },
 
   /**
    * Update layout with anchor, alignment, baseline, and considering any meshes.
    */
   updateLayout: function () {
+    var align;
     var anchor;
     var baseline;
     var el = this.el;
     var data = this.data;
-    var geometry = this.geometry;
     var geometryComponent;
-    var height;
-    var layout;
-    var mesh = this.mesh;
-    var textRenderWidth;
-    var textScale;
+    var textRenderWidth = this.textRenderWidth;
+    var textScale = 1.0;
     var width;
-    var x;
-    var y;
-
-    if (!mesh || !geometry.layout) { return; }
+    var x = 0;
+    var y = 0;
+    var bounds;
 
     // Determine width to use (defined width, geometry's width, or default width).
     geometryComponent = el.getAttribute('geometry');
     width = data.width || (geometryComponent && geometryComponent.width) || DEFAULT_WIDTH;
 
-    // Determine wrap pixel count. Either specified or by experimental fudge factor.
-    // Note that experimental factor will never be correct for variable width fonts.
-    textRenderWidth = computeWidth(data.wrapPixels, data.wrapCount,
-                                   this.currentFont.widthFactor);
+    if (!this.textMesh.textRenderInfo) {
+      return;
+    }
+
+    // Mesh positioning
     textScale = width / textRenderWidth;
 
-    // Determine height to use.
-    layout = geometry.layout;
-    height = textScale * (layout.height + layout.descender);
+    // Determine rendered text dimensions
+    bounds = this.textMesh.textRenderInfo.blockBounds;
+    var textWidth = (bounds[2] - bounds[0]) * textScale;
+    var textHeight = (bounds[3] - bounds[1]) * textScale;
+
+    align = data.align;
+    if (align === 'left') {
+      x = -(width - textWidth) / 2;
+    } else if (align === 'right') {
+      x = (width - textWidth) / 2;
+    } else if (align === 'center') {
+      x = 0;
+    } else {
+      throw new TypeError('Invalid text.align property value', anchor);
+    }
+
+    anchor = data.anchor === 'align' ? data.align : data.anchor;
+    if (anchor === 'left') {
+      x += width / 2;
+    } else if (anchor === 'right') {
+      x -= width / 2;
+    } else if (anchor !== 'center') {
+      throw new TypeError('Invalid text.anchor property value', anchor);
+    }
+
+    // Calculate Y position to anchor text top, center, or bottom.
+    baseline = data.baseline;
+    if (baseline === 'bottom') {
+      y += textHeight / 2;
+    } else if (baseline === 'top') {
+      y -= textHeight / 2;
+    } else if (baseline !== 'center') {
+      throw new TypeError('Invalid text.baseline property value', baseline);
+    }
+
+    this.textMesh.position.set(x + data.xOffset, y + data.yOffset, data.zOffset);
+    this.textMesh.scale.set(textScale, textScale, textScale);
 
     // Update geometry dimensions to match text layout if width and height are set to 0.
     // For example, scales a plane to fit text.
@@ -309,185 +280,18 @@ module.exports.Component = registerComponent('text', {
         this.hasExplicitGeoHeight = !!geometryComponent.height;
       }
       if (!this.hasExplicitGeoWidth) { el.setAttribute('geometry', 'width', width); }
-      if (!this.hasExplicitGeoHeight) { el.setAttribute('geometry', 'height', height); }
-    }
-
-    // Calculate X position to anchor text left, center, or right.
-    anchor = data.anchor === 'align' ? data.align : data.anchor;
-    if (anchor === 'left') {
-      x = 0;
-    } else if (anchor === 'right') {
-      x = -1 * layout.width;
-    } else if (anchor === 'center') {
-      x = -1 * layout.width / 2;
-    } else {
-      throw new TypeError('Invalid text.anchor property value', anchor);
-    }
-
-    // Calculate Y position to anchor text top, center, or bottom.
-    baseline = data.baseline;
-    if (baseline === 'bottom') {
-      y = 0;
-    } else if (baseline === 'top') {
-      y = -1 * layout.height + layout.ascender;
-    } else if (baseline === 'center') {
-      y = -1 * layout.height / 2;
-    } else {
-      throw new TypeError('Invalid text.baseline property value', baseline);
-    }
-
-    // Position and scale mesh to apply layout.
-    mesh.position.x = x * textScale + data.xOffset;
-    mesh.position.y = y * textScale;
-    // Place text slightly in front to avoid Z-fighting.
-    mesh.position.z = data.zOffset;
-    mesh.scale.set(textScale, -1 * textScale, textScale);
-  },
-
-  /**
-   * Grab font from the constant.
-   * Set as a method for test stubbing purposes.
-   */
-  lookupFont: function (key) {
-    return FONTS[key];
-  },
-
-  /**
-   * Update the text geometry using `three-bmfont-text.update`.
-   */
-  updateGeometry: (function () {
-    var geometryUpdateBase = {};
-    var geometryUpdateData = {};
-    var newLineRegex = /\\n/g;
-    var tabRegex = /\\t/g;
-
-    return function (geometry, font) {
-      var data = this.data;
-
-      geometryUpdateData.font = font;
-      geometryUpdateData.lineHeight = data.lineHeight && isFinite(data.lineHeight)
-        ? data.lineHeight
-        : font.common.lineHeight;
-      geometryUpdateData.text = data.value.toString().replace(newLineRegex, '\n')
-                                                     .replace(tabRegex, '\t');
-      geometryUpdateData.width = computeWidth(data.wrapPixels, data.wrapCount,
-                                              font.widthFactor);
-      geometry.update(utils.extend(geometryUpdateBase, data, geometryUpdateData));
-    };
-  })()
-});
-
-/**
- * Due to using negative scale, we return the opposite side specified.
- * https://github.com/mrdoob/three.js/pull/12787/
- */
-function parseSide (side) {
-  switch (side) {
-    case 'back': {
-      return THREE.FrontSide;
-    }
-    case 'double': {
-      return THREE.DoubleSide;
-    }
-    default: {
-      return THREE.BackSide;
+      if (!this.hasExplicitGeoHeight) { el.setAttribute('geometry', 'height', textHeight); }
     }
   }
-}
+});
 
-/**
- * @returns {Promise}
- */
-function loadFont (src, yOffset) {
-  return new Promise(function (resolve, reject) {
-    loadBMFont(src, function (err, font) {
-      if (err) {
-        error('Error loading font', src);
-        reject(err);
-        return;
-      }
-
-      // Fix negative Y offsets for Roboto MSDF font from tool. Experimentally determined.
-      if (src.indexOf('/Roboto-msdf.json') >= 0) { yOffset = 30; }
-      if (yOffset) { font.chars.map(function doOffset (ch) { ch.yoffset += yOffset; }); }
-
-      resolve(font);
-    });
-  });
-}
-
-/**
- * @returns {Promise}
- */
-function loadTexture (src) {
-  return new Promise(function (resolve, reject) {
-    new THREE.ImageLoader().load(src, function (image) {
-      resolve(image);
-    }, undefined, function () {
-      error('Error loading font image', src);
-      reject(null);
-    });
-  });
-}
-
-function createShader (el, shaderName, data) {
-  var shader;
-  var shaderObject;
-
-  // Set up Shader.
-  shaderObject = new shaders[shaderName].Shader();
-  shaderObject.el = el;
-  shaderObject.init(data);
-  shaderObject.update(data);
-
-  // Get material.
-  shader = shaderObject.material;
-  // Apparently, was not set on `init` nor `update`.
-  shader.transparent = data.transparent;
-
-  return {
-    material: shader,
-    shader: shaderObject
-  };
-}
-
-/**
- * Determine wrap pixel count. Either specified or by experimental fudge factor.
- * Note that experimental factor will never be correct for variable width fonts.
- */
-function computeWidth (wrapPixels, wrapCount, widthFactor) {
-  return wrapPixels || ((0.5 + wrapCount) * widthFactor);
-}
-
-/**
- * Compute default font width factor to use.
- */
-function computeFontWidthFactor (font) {
-  var sum = 0;
-  var digitsum = 0;
-  var digits = 0;
-  font.chars.map(function (ch) {
-    sum += ch.xadvance;
-    if (ch.id >= 48 && ch.id <= 57) {
-      digits++;
-      digitsum += ch.xadvance;
-    }
-  });
-  return digits ? digitsum / digits : sum / font.chars.length;
-}
-
-/**
- * Get or create a promise given a key and promise generator.
- * @todo Move to a utility and use in other parts of A-Frame.
- */
-function PromiseCache () {
-  var cache = this.cache = {};
-
-  this.get = function (key, promiseGenerator) {
-    if (key in cache) {
-      return cache[key];
-    }
-    cache[key] = promiseGenerator();
-    return cache[key];
-  };
+function parseSide (side) {
+  switch (side) {
+    case 'back':
+      return THREE.BackSide;
+    case 'double':
+      return THREE.DoubleSide;
+    default:
+      return THREE.FrontSide;
+  }
 }
